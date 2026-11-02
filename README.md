@@ -13,7 +13,7 @@ The framework combines longitudinal biomarker measurements with residual surviva
 For a subject with recorded pre-landmark visits $t_{ij}\leq\ell$, the normalized recency weights are
 
 $$
-w_{ij}(\lambda;\ell)=\frac{\exp[-\lambda(\ell-t_{ij})]}{\left\{\sum_{k=1}^{n_i}\exp[-2\lambda(\ell-t_{ik})]\right\}^{1/2}},\qquad \sum_{j=1}^{n_i}w_{ij}^{2}=1.
+w_{ij}(\lambda;\ell)=\frac{\exp[-\lambda(\ell-t_{ij})]}{\{\sum_{k=1}^{n_i}\exp[-2\lambda(\ell-t_{ik})]\right\}^{1/2}\},\qquad \sum_{j=1}^{n_i}w_{ij}^{2}=1.
 $$
 
 Writing $R_i=T_i^*-\ell>0$ for residual survival time in the landmark-eligible cohort, the longitudinal and accelerated failure-time components are
