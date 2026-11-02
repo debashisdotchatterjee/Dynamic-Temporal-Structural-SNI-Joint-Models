@@ -39,7 +39,7 @@ Its Schur complement is $\sigma_T^2(1-\rho^2)>0$ for $|\rho|<1$, irrespective of
 ## Statistical methodology
 
 - **Random effects:** centered SNI random intercept and slope, $\mathbf b_i=U_i^{-1/2}(\boldsymbol\Delta H_i+\mathbf G_i)-a_U\boldsymbol\Delta$, with $H_i$ half-normal and $U_i$ an independent positive mixing variable.
-- **Residual innovations:** an additional independent scale $V_i$ induces heavy-tailed measurement and event innovations; the reported SNI model takes $U_i,V_i\stackrel{\mathrm{iid}}\sim\operatorname{Gamma}(3,3)$ (shape–rate, six degrees of freedom).
+- **Residual innovations:** an additional independent scale $V_i$ induces heavy-tailed measurement and event innovations; the reported SNI model takes $U_i,V_i\stackrel{\mathrm{iid}}\sim Gamma(3,3)$ (shape–rate, six degrees of freedom).
 - **Likelihood:** all Gaussian random-intercept/slope terms are analytically integrated out. The SNI fit then uses deterministic probability-scale Gauss–Legendre quadrature over $(H_i,U_i,V_i)$.
 - **Estimation:** penalized marginal joint likelihood, automatic differentiation, and bounded L-BFGS-B optimization; **no MCMC** is used.
 - **Prediction:** conditional event probabilities from the joint distribution of pre-landmark biomarker history and residual survival, with right-censored contributions handled through the conditional survivor function.
