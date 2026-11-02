@@ -1,6 +1,6 @@
 # Landmark-temporal structural joint models: computational study
 
-**Purpose.** This package is the *computational phase only* for a research manuscript on continuous temporal residual dependence and skew-normal/independent (SNI) joint models of longitudinal biomarkers and survival. The manuscript itself is intentionally **not rewritten** here; the empirical results should be inspected before results, discussion, and theory are finalized.
+**Purpose.** This package is the *computational phase only* for a research manuscript on continuous temporal residual dependence and skew-normal/independent (SNI) joint models of longitudinal biomarkers and survival. 
 
 ## Files delivered
 
@@ -26,9 +26,7 @@ The source is the 1,945-row sequential Mayo Clinic primary biliary cirrhosis dat
 - Dataset documentation: https://search.r-project.org/CRAN/refmans/survival/html/pbcseq.html
 - Clinical joint-model precedent: https://drizopoulos.github.io/JMbayes2/
 
-## Why the manuscript's current likelihood requires adjustment
 
-The uploaded manuscript proposes a conditional covariance `c_j(T*) = κ exp{-λ(T*−t_j)}` where **the same random event time** `T*` is part of the joint Gaussian vector. Such a self-referential, event-dependent Gaussian covariance does not, without an appropriate normalizing construction, specify the claimed Gaussian conditional distribution. In addition, the original minimum-spacing theorem needs a strictly positive lower bound on inter-visit spacing; simply adding exponential decay does **not** guarantee positive definiteness when visit density diverges in a finite time interval. Likewise, an expression `Normal(m(T*),s²(T*))` is generally not an ordinary Gaussian distribution and its right-tail probability is not the naïve Gaussian CDF.
 
 For the computational study, the structural model is *prospective at a prespecified fixed landmark* `ell`, so that only times `t_ij <= ell` enter the predictor. Define
 
