@@ -27,7 +27,7 @@ $$
 with the innovation covariance, conditional on its positive scale $V_i=v$,
 
 $$
-\operatorname{Cov}\!\left(\begin{bmatrix}\boldsymbol\varepsilon_i\\\eta_i\end{bmatrix}\Bigm|V_i=v\right)
+{Cov}\!\left(\begin{bmatrix}\boldsymbol\varepsilon_i\\\eta_i\end{bmatrix}\Bigm|V_i=v\right)
 =\frac1v\begin{bmatrix}
 \sigma_e^2 I_{n_i}&\rho\sigma_e\sigma_T\mathbf w_i\\
 \rho\sigma_e\sigma_T\mathbf w_i^\mathsf T&\sigma_T^2
