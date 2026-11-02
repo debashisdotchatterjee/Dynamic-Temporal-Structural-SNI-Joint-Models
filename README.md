@@ -1,111 +1,126 @@
-# Landmark-temporal structural joint models: computational study
+# Landmark Structural Joint Models with Normalized Temporal Decay and Skew-Normal/Independent Random Effects
 
-**Purpose.** This package is the *computational phase only* for a research manuscript on continuous temporal residual dependence and skew-normal/independent (SNI) joint models of longitudinal biomarkers and survival. 
+**Research and reproducibility repository**  
+Debashis Chatterjee and Arindom Chakraborty  
+Department of Statistics, Visva-Bharati University, Santiniketan, India
 
-## Files delivered
+This repository accompanies the research article *Landmark Structural Joint Models with Normalized Temporal Decay and Skew-Normal/Independent Random Effects*. It contains a complete LaTeX manuscript, mathematical proofs, Python implementations, a self-contained Google Colab notebook, publication figures and tables, and the machine-readable results of the computational study.
 
-- `HJ_Joint_Model_Colab.ipynb`: **single-file Google Colab notebook** with the complete executable Python code embedded; open it in Colab, select Runtime → Run all. No separate `.py` upload is needed.
-- `hj_joint_study.py`: equivalent standalone Python implementation (`python hj_joint_study.py`).
-- `README.md`: methodological and reproducibility details.
-- `requirements.txt`: Python dependencies.
+## Overview
 
-The notebook automatically **downloads a ZIP** named `HJ_structural_joint_outputs.zip`. The ZIP includes publication-oriented PDF/PNG figures, CSV and LaTeX tables, held-out individual-level risk predictions, a copy of the actual public real-data source, parameter estimates, optimizer diagnostics, dataset provenance/checksum, exact source code, environment versions, and a status file. Results are not shipped as precomputed or manufactured values.
+The framework combines longitudinal biomarker measurements with residual survival after a **prespecified prediction landmark**. It separates two sources of prognostic association: persistent subject-specific trajectory variation and time-weighted measurement innovations. Skew-normal/independent (SNI) random effects and scale mixtures extend the Gaussian formulation to asymmetric and heavy-tailed data.
 
-## Run in Colab
+For a subject with recorded pre-landmark visits $t_{ij}\leq\ell$, the normalized recency weights are
 
-1. Open `HJ_Joint_Model_Colab.ipynb` at <https://colab.research.google.com/> (File → Upload notebook).
-2. Execute all cells in order. The notebook installs common Python libraries if needed and executes the included script.
-3. It downloads a **genuine public clinical dataset**, performs model fitting, simulations, validation checks, produces figures/tables, then triggers the output ZIP download.
-4. If a network firewall blocks the data source, the program **fails explicitly for real data** and logs the error; it does not silently create fake empirical results. Upload `pbcseq.csv` to the current Colab working directory and rerun if necessary. The simulation study is independent of the external download.
+$$
+w_{ij}(\lambda;\ell)=\frac{\exp[-\lambda(\ell-t_{ij})]}{\left\{\sum_{k=1}^{n_i}\exp[-2\lambda(\ell-t_{ik})]\right\}^{1/2}},\qquad \sum_{j=1}^{n_i}w_{ij}^{2}=1.
+$$
 
-The source is the 1,945-row sequential Mayo Clinic primary biliary cirrhosis dataset (`survival::pbcseq`, 312 patients):
+Writing $R_i=T_i^*-\ell>0$ for residual survival time in the landmark-eligible cohort, the longitudinal and accelerated failure-time components are
 
-- Primary: https://vincentarelbundock.github.io/Rdatasets/csv/survival/pbcseq.csv
-- Mirror: https://raw.githubusercontent.com/vincentarelbundock/Rdatasets/master/csv/survival/pbcseq.csv
-- Secondary repository mirror: https://github.com/TheAxeC/cirrhosis-competing-risks/blob/main/data/pbcseq.csv
-- Dataset documentation: https://search.r-project.org/CRAN/refmans/survival/html/pbcseq.html
-- Clinical joint-model precedent: https://drizopoulos.github.io/JMbayes2/
+$$
+\mathbf Y_i=\mathbf X_i\boldsymbol\beta+\mathbf Z_i\mathbf b_i+\boldsymbol\varepsilon_i,
+\qquad
+\log R_i=\mathbf q_i^\mathsf T\boldsymbol\alpha+\nu b_{1i}+\eta_i,
+$$
 
+with the innovation covariance, conditional on its positive scale $V_i=v$,
 
+$$
+\operatorname{Cov}\!\left(\begin{bmatrix}\boldsymbol\varepsilon_i\\\eta_i\end{bmatrix}\Bigm|V_i=v\right)
+=\frac1v\begin{bmatrix}
+\sigma_e^2 I_{n_i}&\rho\sigma_e\sigma_T\mathbf w_i\\
+\rho\sigma_e\sigma_T\mathbf w_i^\mathsf T&\sigma_T^2
+\end{bmatrix}.
+$$
 
-For the computational study, the structural model is *prospective at a prespecified fixed landmark* `ell`, so that only times `t_ij <= ell` enter the predictor. Define
+Its Schur complement is $\sigma_T^2(1-\rho^2)>0$ for $|\rho|<1$, irrespective of the finite visit count or irregular sampling schedule. The manuscript gives the formal proofs, moment decomposition, likelihood construction, and the conditional structural-identification result. The model is **landmark- and finite-design-specific**; its normalized covariance matrices are not claimed to be the projective marginals of one visit-schedule-invariant continuous-time process.
 
-`k_ij = exp(-lambda*(ell-t_ij))` and `w_ij = k_ij / sqrt(sum_j k_ij^2)`.
+## Statistical methodology
 
-Let `b_i` be random intercept and slope, `e_ij` measurement innovations, `V_i` residual scale, `U_i` random-effect scale, and `H_i` standard half-normal. The exact generative specification is
+- **Random effects:** centered SNI random intercept and slope, $\mathbf b_i=U_i^{-1/2}(\boldsymbol\Delta H_i+\mathbf G_i)-a_U\boldsymbol\Delta$, with $H_i$ half-normal and $U_i$ an independent positive mixing variable.
+- **Residual innovations:** an additional independent scale $V_i$ induces heavy-tailed measurement and event innovations; the reported SNI model takes $U_i,V_i\stackrel{\mathrm{iid}}\sim\operatorname{Gamma}(3,3)$ (shape–rate, six degrees of freedom).
+- **Likelihood:** all Gaussian random-intercept/slope terms are analytically integrated out. The SNI fit then uses deterministic probability-scale Gauss–Legendre quadrature over $(H_i,U_i,V_i)$.
+- **Estimation:** penalized marginal joint likelihood, automatic differentiation, and bounded L-BFGS-B optimization; **no MCMC** is used.
+- **Prediction:** conditional event probabilities from the joint distribution of pre-landmark biomarker history and residual survival, with right-censored contributions handled through the conditional survivor function.
 
+Four specified models are compared: `Shared-Gaussian` (no residual association), `Flat-Gaussian` (normalized flat loading), `Decay-Gaussian` (normalized exponential recency loading), and `Decay-SNI` (temporal loading plus SNI mixtures).
+
+## Computational experiments
+
+The simulation study considers: Gaussian temporal association, skewed/heavy-tailed temporal association, and a null-residual-association control. It evaluates held-out conditional survival log score, IPCW Brier score, concordance, and parameter recovery. Reported experiments contain **12 independent replicates per scenario, each with 240 simulated subjects**, and the random seed `20261103`.
+
+The empirical study uses the Mayo Clinic **primary biliary cirrhosis** longitudinal dataset, `survival::pbcseq` (312 trial patients, 1,945 sequential visits). Log serum bilirubin is the longitudinal outcome; death or liver transplantation forms a composite survival endpoint. At the two-year landmark, the defined risk set contains **266 eligible participants**, with **132 observed subsequent composite events** and **134 censored observations**. The study reports three subject-level stratified 72/28 training/test partitions and supplementary landmark analyses at one and three years.
+
+Treatment in the distributed analysis CSV is coded `1 = D-penicillamine`, `0 = placebo`. Only measurements collected no later than each prediction landmark are used. The study makes no causal claim about treatment effects.
+
+**Data documentation:** [Mayo PBC sequential dataset (`survival`)](https://therneau.r-universe.dev/survival/doc/page/pbcseq) · [public CSV](https://vincentarelbundock.github.io/Rdatasets/csv/survival/pbcseq.csv). Source information and checksums are recorded in `provenance/source.json`.
+
+## Repository contents
+
+```text
+.
+├── README.md
+├── LICENSE
+├── main.tex                      # Article and mathematical appendices
+├── ref.bib                       # References
+├── main.pdf                      # Compiled manuscript
+├── figures/                      # Vector PDF research figures
+├── tables/                       # Machine-generated LaTeX table data
+├── analysis_code/
+│   ├── HJ_Joint_Model_Colab.ipynb
+│   ├── hj_joint_study.py
+│   ├── quadrature_refinement.py
+│   └── requirements.txt
+└── provenance/                   # Simulation / PBC results and run metadata
 ```
-b_i = U_i^(-1/2) * (Delta * H_i + G_i) - a * Delta
-G_i ~ N_2(0, Gamma),   a = E[U^(-1/2)] sqrt(2/pi)
-Y_ij = beta0 + beta1*t_ij + beta_sex*sex_i + beta_trt*trt_i
-       + b_i0 + b_i1*t_ij + e_ij
-e_ij | V_i ~ N(0, sigma_e^2/V_i), independently over j
-L_i = log(T_i* - ell)
-    = alpha0 + alpha_age*age_i + alpha_sex*sex_i + alpha_trt*trt_i
-      + nu*b_i1 + (sigma_T*rho/sigma_e)*sum_j w_ij*e_ij
-      + sigma_T*sqrt(1-rho^2)*Z_i/sqrt(V_i)
-Z_i ~ N(0,1)
+
+## Reproducing the analyses
+
+**Google Colab.** Open `analysis_code/HJ_Joint_Model_Colab.ipynb` in [Google Colab](https://colab.research.google.com/), and execute all cells. The notebook includes the analysis source and configuration and creates `HJ_structural_joint_outputs.zip` containing plots, tables, raw results, fit diagnostics, code, and environment metadata. Colab may require access to the public source CSV; if network access is unavailable, upload the genuine `pbcseq.csv` to the current working directory.
+
+**Local Python.** Python 3.10+ is recommended. Install the dependencies and set the article's computational settings:
+
+```bash
+python -m pip install -r analysis_code/requirements.txt
+export HJ_SEED=20261103
+export HJ_LANDMARK=2.0
+export HJ_SIM_REPS=12
+export HJ_SIM_N=240
+export HJ_REAL_REPEATS=3
+export HJ_MAX_ITER=160
+export HJ_ROBUST_QUAD=5,5,4
+python analysis_code/hj_joint_study.py
 ```
 
-with independent `U_i`, `V_i`, `H_i`, `G_i`, `Z_i`. In the Gaussian models `U_i=V_i=1, Delta=0`; in the full SNI model `U_i~Gamma(3,3)` and independently `V_i~Gamma(3,3)`, with degrees of freedom fixed at 6 for feasibility. The Gaussian core is **analytically marginalized over all subject-specific random intercepts and slopes**, not estimated in a two-stage mixed-model plug-in. The SNI extension uses Gaussian analytical integration conditional on `H,U,V` and deterministic Gaussian-Legendre quadrature to approximate the remaining low-dimensional integrals. Thus, the full SNI fit is a **quadrature-approximated marginal joint likelihood**, *not MCMC*; the eventual paper must describe the inference actually performed.
+On Windows PowerShell, use `$env:HJ_SIM_REPS="12"` (similarly for the other variables), then run the Python command. The standalone script uses smaller exploratory defaults if these variables are not set. Re-running the full experiments is computationally more demanding than reading the included results.
 
-Conditional on `V_i=v`, the residual covariance between the longitudinal innovation vector and the AFT innovation has block form
+For a fixed-parameter assessment of integration accuracy in the clinical application, run:
 
+```bash
+python analysis_code/quadrature_refinement.py
 ```
-Sigma_i(v) = v^(-1) * [[sigma_e^2 I, sigma_e*sigma_T*rho*w],
-                        [sigma_e*sigma_T*rho*w^T, sigma_T^2]]
+
+This diagnostic evaluates already fitted SNI parameter vectors using `5×5×4`, `7×7×6`, and `9×9×7` integration nodes. It does **not** replace refitting each model under refined quadrature. The published numerical results and their precise model settings are available in `provenance/run_config.json` and the corresponding CSV files.
+
+## Mathematical and numerical checks
+
+The program checks positive-definiteness through the analytic Schur complement and direct eigenvalues, verifies the Gaussian marginalized event likelihood against a directly assembled multivariate Gaussian density, checks finite automatic derivatives, and validates predicted-probability ranges. Both optimizer diagnostics and test-subject predictions are preserved. The positive-definiteness proof establishes covariance admissibility, not strong finite-sample parameter identification.
+
+The clinical results are interpreted as **exploratory predictive evidence**: residual-association models improve some held-out scores compared with the shared-effects-only baseline, while the data do not establish consistent superiority of temporal decay over normalized flat association. Several fitted association parameters lie on optimization bounds; consequently they should not be given precise clinical effect interpretations. The limited simulation replication count, possible informative visit schedules, and absence of external validation are discussed in the article.
+
+## Compiling the manuscript
+
+Upload the repository's manuscript files as a new [Overleaf](https://www.overleaf.com/) project, choose `main.tex` as the root document, and compile with pdfLaTeX and BibTeX. Alternatively:
+
+```bash
+latexmk -pdf -interaction=nonstopmode main.tex
 ```
 
-Because `||w||²=1`, the Schur complement equals `sigma_T²*(1-rho²)>0` whenever `|rho|<1`. This holds for **every n>=1**, even increasingly dense observation schedules, and is directly tested numerically against the original unnormalized flat and exponential kernels.
+The paper contains the derivations, labeled proofs in appendices, simulation and real-data tables, vector figures, and declarations.
 
-## Real-data design
+## Citation and licensing
 
-- Longitudinal marker: `log(bili)` (natural log of serum bilirubin in mg/dL).
-- Event outcome: **composite death or transplantation** (`status` 1 or 2), with administrative/lost follow-up (`status` 0) treated as right censored. This avoids incorrectly treating transplant as noninformative censoring in a death-only analysis.
-- Default landmark: **two years after enrollment**. Only patients alive/under follow-up after this date, with **at least two distinct pre-landmark recorded bilirubin values**, are eligible. All post-landmark biomarker data are excluded from the predictors. Follow-up is analyzed as positive residual survival time `T*−ell`.
-- Random subject train/test splits, stratified by event status; no patient appears in both sets in one split.
-- Longitudinal and event model parameters fit only on training subjects. Age scaling is fixed a priori as `(age−50)/10` to prevent test-set preprocessing leakage.
-- Primary evaluation: **held-out conditional event-time log score**; complementary scores: proper joint log score, IPCW Brier at 2 and 4 years, and Harrell C-index. Censoring weights are estimated from **training** subjects only.
-- Paired subject-bootstrap comparisons of held-out conditional log score; descriptive uncertainty, not a substitute for external validation.
-- Landmark sensitivity at 1 and 3 years.
+If you use the methodology or implementation, please cite the accompanying manuscript, *Landmark Structural Joint Models with Normalized Temporal Decay and Skew-Normal/Independent Random Effects*, by Debashis Chatterjee and Arindom Chakraborty. A journal DOI can be added upon publication.
 
-These are **conditional landmark joint models**, not unconditional original-enrollment time-to-event joint models. Clinical interpretation is restricted to patients eligible at the landmark. The noninformative censoring and observation-schedule assumptions require scrutiny, and informative clinical visit scheduling may affect generalization.
-
-## Four prespecified model comparisons
-
-1. `Shared-Gaussian`: conventional shared random-effect slope association, no residual structural coupling (`rho=0`).
-2. `Flat-Gaussian`: shared slope plus normalized constant residual weights (`lambda=0`).
-3. `Decay-Gaussian`: shared slope plus normalized **exponentially decaying** residual weights (`rho` and `lambda` estimated).
-4. `Decay-SNI`: decaying kernel with two-component skew-t random effects and independent Student-t residual scale mixtures (fixed df=6).
-
-The objective is a weakly regularized joint log likelihood (MAP-type estimation under explicit Gaussian penalties), optimized with L-BFGS-B and automatic derivatives from PyTorch. Optimizer convergence flags, bounds, and fitted values are all retained. Neither parameter identification nor numerical convergence is presumed guaranteed.
-
-## Three simulation regimes
-
-- `Gaussian-decay`: correctly specified decay + Gaussian errors, used for bias/RMSE and comparison against omitted or flat coupling.
-- `SkewT-decay`: skewed heavy-tailed random effects **and** independent heavy-tailed residuals, assessing robustness.
-- `Null-residual`: `rho=0`, assessing false association and overfit in the more flexible models. **Lambda is unidentifiable under this null**, and lambda recovery is purposefully not summarized for it.
-
-Each replicate creates fresh, irregular visit times, independent biomarker innovations, right-censored residual event times, and independent subject-level train/test sets. The simulation is not manipulated to force the proposed model to win. For publication-level Monte Carlo standard errors, increase `HJ_SIM_REPS` to at least 100 or more after a computational feasibility check, and inspect nonconvergence counts. The Colab defaults prioritize reasonable turnaround for **initial verification** and should **not** be reported as definitive simulation evidence.
-
-## Runtime settings
-
-Set environment variables in the notebook's configuration cell *before* executing:
-
-| Variable | Meaning | Notebook starting value |
-|---|---|---|
-| `HJ_SIM_REPS` | Independent repetitions per scenario | `12` |
-| `HJ_SIM_N` | Subjects per simulated replicate | `240` |
-| `HJ_REAL_REPEATS` | Independent 72/28 train/test splits | `3` |
-| `HJ_MAX_ITER` | L-BFGS-B maximum iterations | `160` |
-| `HJ_ROBUST_QUAD` | Half-normal x U gamma x V gamma nodes | `5,5,4` |
-| `HJ_LANDMARK` | Main landmark in years | `2.0` |
-| `HJ_SEED` | Random seed | `20261103` |
-
-The standalone `.py` uses lighter defaults (`6` reps, `200` subjects, `2` splits, `115` iterations, `4,4,3` nodes). The notebook explicitly overrides these for a stronger initial run. Increase the settings for finalized paper simulations, review model convergence, and repeat with finer quadrature nodes (e.g. `7,7,5`) to verify the SNI numerical approximation.
-
-## Verifiability and limitations
-
-The script verifies the **exact Gaussian likelihood identity** against a directly assembled multivariate normal covariance, checks differentiation and probability ranges, checks actual eigenvalues against the Schur formula, and records failure logs. Reproducibility includes source-file SHA-256, random seed, run settings, versions, and held-out predictions.
-
-**Do not interpret one split, a few simulation replications, or conditional log scores as proof of a universally superior procedure.** This is a genuinely computed verification study whose outputs may support, weaken, or falsify assumptions and claims. In particular, weak identification of `lambda` is expected if every subject has nearly identical visit schedules or if residual association is negligible. Further work before a top-journal submission would include more replications, Monte Carlo standard errors, full numerical integration sensitivity, formal uncertainty quantification, possible informative observation processes, and competing-risk extensions if clinically required. The mathematical results in the eventual manuscript must be compatible with this corrected, fixed-landmark generative formulation.
+Source code is distributed under the **[MIT License](LICENSE)**. The historical clinical dataset is attributed to its original study and maintainers; its provenance and any applicable source terms are separate from the source-code license. No competing interests are declared in the manuscript.
